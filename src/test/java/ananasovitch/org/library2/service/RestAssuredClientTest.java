@@ -1,56 +1,69 @@
 package ananasovitch.org.library2.service;
 
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import ananasovitch.org.library2.model.Author;
-import ananasovitch.org.library2.model.Book;
-import ananasovitch.org.library2.model.BookRequest;
+import ananasovitch.org.library2.model.*;
+import io.qameta.allure.Description;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Story;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
-@Epic("Library Service Tests")
+@Epic("Library service")
 public class RestAssuredClientTest {
     private static RestAssuredClient client;
 
     @BeforeAll
     public static void setup() {
-        client = new RestAssuredClient("http://localhost:8080");
+        client = new RestAssuredClient();
     }
 
     @Test
-    @Story("Get All Books for Author")
-    @DisplayName("Get All Books for Author Successful Request")
-    public void testGetAllBooksForAuthor() {
-        Long authorId = 1L;
-        List <Book> bookList = client.getAuthorBooks(authorId);
-        assertFalse(bookList.isEmpty());
-    }
+    @Story("Сохранение нового автора и сохранение новой книги")
+    @DisplayName("Успешный запрос на сохранение нового автора и сохранение новой книги")
+    @Description("Проверка, что запросы POST для сохранения нового автора и новой книги возвращают успешные ответы.")
+    public void testSaveAuthorAndBook() {
+        AuthorRequest authorRequest = new AuthorRequest();
+        authorRequest.setFirstName("Иван");
+        authorRequest.setFamilyName("Иванов");
+        authorRequest.setSecondName("Иванович");
+        AuthorResponse authorResponse = client.saveAuthor(authorRequest);
+        assertNotNull(authorResponse.getAuthorId());
+        assertNull(authorResponse.getError());
 
-    @Test
-    @Story("Save New Book")
-    @DisplayName("Save New Book Successful Request")
-    public void testSaveNewBook() {
         BookRequest bookRequest = new BookRequest();
-        bookRequest.setBookTitle("New Book");
-        bookRequest.setAuthor(new Author(1L, "First", "Second"));
-        Book savedBook = client.saveNewBook(bookRequest);
-        assertEquals(bookRequest.getBookTitle(), savedBook.getBookTitle());
+        bookRequest.setBookTitle("Новая книга");
+        bookRequest.setAuthor(new Author(authorResponse.getAuthorId(), "Иван", "Иванов"));
+        BookResponse bookResponse = client.saveBook(bookRequest);
+        assertNotNull(bookResponse.getBookId());
+        assertNull(bookResponse.getError());
     }
 
     @Test
-    @Story("Get All Books for Author XML")
-    @DisplayName("Get All Books for Author XML Successful Request")
-    public void testGetAllBooksForAuthorXml() {
-        Long authorId = 1L;
-        List<Book> books = client.getAuthorBooksXml(authorId);
-        assertFalse(books.isEmpty());
+    @Story("Получение всех книг автора")
+    @DisplayName("Успешный запрос на получение всех книг автора после сохранения книги")
+    @Description("Проверка, что запрос GET для получения всех книг автора возвращает успешный ответ после сохранения книги.")
+    public void testGetAuthorBooksAfterBookSave() {
+        AuthorRequest authorRequest = new AuthorRequest();
+        authorRequest.setFirstName("Петр");
+        authorRequest.setFamilyName("Петров");
+        authorRequest.setSecondName("Петрович");
+        AuthorResponse authorResponse = client.saveAuthor(authorRequest);
+        assertNotNull(authorResponse.getAuthorId());
+        assertNull(authorResponse.getError());
+
+        BookRequest bookRequest = new BookRequest();
+        bookRequest.setBookTitle("Новая книга 2");
+        bookRequest.setAuthor(new Author(authorResponse.getAuthorId(), "Петр", "Петров"));
+        BookResponse bookResponse = client.saveBook(bookRequest);
+        assertNotNull(bookResponse.getBookId());
+        assertNull(bookResponse.getError());
+
+        GetAuthorBooksResponse getAuthorBooksResponse = client.getAuthorBooks(authorResponse.getAuthorId());
+        List<Book> books = getAuthorBooksResponse.getBooks();
+        assertNotNull(books);
+        assertTrue(books.size() > 0);
+        assertNull(getAuthorBooksResponse.getError());
     }
 }
