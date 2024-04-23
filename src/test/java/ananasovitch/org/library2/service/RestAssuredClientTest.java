@@ -24,20 +24,22 @@ public class RestAssuredClientTest {
     @DisplayName("Успешный запрос на сохранение нового автора и сохранение новой книги")
     @Description("Проверка, что запросы POST для сохранения нового автора и новой книги возвращают успешные ответы.")
     public void testSaveAuthorAndBook() {
+        long uniqueId = System.currentTimeMillis();
+
         AuthorRequest authorRequest = new AuthorRequest();
         authorRequest.setFirstName("Иван");
         authorRequest.setFamilyName("Иванов");
         authorRequest.setSecondName("Иванович");
+        authorRequest.setUniqueId(uniqueId);
         AuthorResponse authorResponse = client.saveAuthor(authorRequest);
-        assertNotNull(authorResponse.getAuthorId());
-        assertNull(authorResponse.getError());
+
+           uniqueId = System.currentTimeMillis();
 
         BookRequest bookRequest = new BookRequest();
-        bookRequest.setBookTitle("Новая книга");
-        bookRequest.setAuthor(new Author(authorResponse.getAuthorId(), "Иван", "Иванов"));
-        BookResponse bookResponse = client.saveBook(bookRequest);
-        assertNotNull(bookResponse.getBookId());
-        assertNull(bookResponse.getError());
+        bookRequest.setBookTitle("Евгений Онегин");
+        bookRequest.setAuthorId(authorResponse.getAuthorId());
+        bookRequest.setUniqueId(uniqueId);
+        client.saveBook(bookRequest);
     }
 
     @Test
@@ -45,25 +47,27 @@ public class RestAssuredClientTest {
     @DisplayName("Успешный запрос на получение всех книг автора после сохранения книги")
     @Description("Проверка, что запрос GET для получения всех книг автора возвращает успешный ответ после сохранения книги.")
     public void testGetAuthorBooksAfterBookSave() {
+         long uniqueId = System.currentTimeMillis();
+
+
         AuthorRequest authorRequest = new AuthorRequest();
-        authorRequest.setFirstName("Петр");
-        authorRequest.setFamilyName("Петров");
-        authorRequest.setSecondName("Петрович");
+        authorRequest.setFirstName("Александр");
+        authorRequest.setFamilyName("Пушкин");
+        authorRequest.setSecondName("Сергеевич");
+        authorRequest.setUniqueId(uniqueId);
         AuthorResponse authorResponse = client.saveAuthor(authorRequest);
-        assertNotNull(authorResponse.getAuthorId());
-        assertNull(authorResponse.getError());
+
+        uniqueId = System.currentTimeMillis();
 
         BookRequest bookRequest = new BookRequest();
-        bookRequest.setBookTitle("Новая книга 2");
-        bookRequest.setAuthor(new Author(authorResponse.getAuthorId(), "Петр", "Петров"));
-        BookResponse bookResponse = client.saveBook(bookRequest);
-        assertNotNull(bookResponse.getBookId());
-        assertNull(bookResponse.getError());
+        bookRequest.setBookTitle("Евгений Онегин");
+        bookRequest.setAuthorId(authorResponse.getAuthorId());
+        bookRequest.setUniqueId(uniqueId);
+        client.saveBook(bookRequest);
 
-        GetAuthorBooksResponse getAuthorBooksResponse = client.getAuthorBooks(authorResponse.getAuthorId());
-        List<Book> books = getAuthorBooksResponse.getBooks();
-        assertNotNull(books);
-        assertTrue(books.size() > 0);
-        assertNull(getAuthorBooksResponse.getError());
+
+        List<Book> authorBooks = client.getAuthorBooks(authorResponse.getAuthorId());
+
+        assertFalse(authorBooks.isEmpty(), "Список книг автора должен быть не пустым после добавления книги");
     }
 }

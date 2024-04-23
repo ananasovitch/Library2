@@ -1,29 +1,20 @@
 package ananasovitch.org.library2.model;
 
-
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @Data
-@NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@XmlRootElement(name = "author")
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class Author {
-    @XmlElement(name = "id")
-    private long id;
-
-    @XmlElement(name = "firstName")
+    @JsonProperty("id")
+    private Long id;
+    @JsonProperty("firstName")
     private String firstName;
-
-    @XmlElement(name = "secondName")
+    @JsonProperty("secondName")
     private String secondName;
-
-    public Author(long id, String firstName, String secondName) {
-        this.id = id;
-        this.firstName = firstName;
-        this.secondName = secondName;
-    }
+    @JsonProperty("familyName")
+    private String familyName;
 }
