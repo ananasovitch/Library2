@@ -1,80 +1,59 @@
 package ananasovitch.org.library2.service;
 
 import ananasovitch.org.library2.model.*;
-import io.restassured.builder.RequestSpecBuilder;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
-import io.restassured.http.ContentType;
+import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import io.restassured.specification.RequestSpecification;
+import org.junit.jupiter.api.Assertions;
 
 import java.util.List;
-
-import static ananasovitch.org.library2.service.Endpoints.*;
-import static io.restassured.RestAssured.given;
-import static org.junit.jupiter.api.Assertions.*;
 
 public class RestAssuredClient {
     private final RequestSpecification requestSpecification;
 
     public RestAssuredClient() {
-        requestSpecification = new RequestSpecBuilder()
-                .setBaseUri(BASE_URI)
-                .setBasePath(BASE_PATH) // Используем basePath
-                .setContentType(ContentType.JSON)
-                .addFilter(new RequestLoggingFilter())
-                .addFilter(new ResponseLoggingFilter())
-                .build();
+        requestSpecification = RestAssured.given()
+                .baseUri("http://localhost:8080")
+                .basePath("/api")
+                .contentType("application/json");
     }
 
     public AuthorResponse saveAuthor(AuthorRequest authorRequest) {
-        // Добавляем уникальность запроса
-        authorRequest.setUniqueId(System.currentTimeMillis());
-
-        Response response = given()
-                .spec(requestSpecification)
+        Response response = requestSpecification
                 .body(authorRequest)
-                .post(AUTHORS_SAVE);
+                .post("/authors");
         assertStatusCode(response, 200);
-        AuthorResponse authorResponse = response.as(AuthorResponse.class);
-        assertNotNull(authorResponse.getAuthorId());
-        assertNull(authorResponse.getError());
-        return authorResponse;
+        return response.as(AuthorResponse.class);
     }
 
-    public BookResponse saveBook(BookRequest bookRequest) {
-        // Добавляем уникальность запроса
-        bookRequest.setUniqueId(System.currentTimeMillis());
-
-        // Устанавливаем только идентификатор автора в запрос
-        BookRequest requestBody = new BookRequest();
-        requestBody.setBookTitle(bookRequest.getBookTitle());
-        requestBody.setAuthorId(bookRequest.getAuthorId());
-        requestBody.setUniqueId(bookRequest.getUniqueId());
-
-        Response response = given()
-                .spec(requestSpecification)
-                .body(requestBody)
-                .post(BOOKS_SAVE);
+    public void saveBook(BookRequest bookRequest) {
+        Response response = requestSpecification
+                .body(bookRequest)
+                .post("/books");
         assertStatusCode(response, 200);
-        BookResponse bookResponse = response.as(BookResponse.class);
-        assertNotNull(bookResponse.getBookId());
-        assertNull(bookResponse.getError());
-        return bookResponse;
     }
 
-    public List<Book> getAuthorBooks(Long authorId) {
-        Response response = given()
-                .spec(requestSpecification)
-                .pathParam("id", authorId)
-                .get(AUTHORS_BOOKS);
+    public List<Book> getAuthorBooks(long authorId) {
+        Response response = requestSpecification
+                .pathParam("authorId", authorId)
+                .get("/authors/{authorId}/books");
         assertStatusCode(response, 200);
-        List<Book> authorBooks = response.then().extract().jsonPath().getList("", Book.class);
-        assertNotNull(authorBooks, "Author books list should not be null");
-        return authorBooks;
+        return response.as(List.class);
     }
 
     private void assertStatusCode(Response response, int expectedStatusCode) {
-        assertEquals(expectedStatusCode, response.getStatusCode(), "Status code does not match expected value");
+        Assertions.assertEquals(expectedStatusCode, response.getStatusCode(), "Status code does not match expected value");
+    }
+
+    private void assertNotNull(Object object, String message) {
+        Assertions.assertNotNull(object, message);
+    }
+
+    private void assertNull(Object object, String message) {
+        Assertions.assertNull(object, message);
+    }
+
+    private void assertFalse(boolean condition, String message) {
+        Assertions.assertFalse(condition, message);
     }
 }

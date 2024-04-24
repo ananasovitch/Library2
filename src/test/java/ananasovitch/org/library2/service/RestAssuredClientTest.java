@@ -1,15 +1,13 @@
 package ananasovitch.org.library2.service;
-
 import ananasovitch.org.library2.model.*;
 import io.qameta.allure.Description;
 import io.qameta.allure.Epic;
 import io.qameta.allure.Story;
 import org.junit.jupiter.api.*;
 
+
+
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 @Epic("Library service")
 public class RestAssuredClientTest {
     private static RestAssuredClient client;
@@ -33,7 +31,7 @@ public class RestAssuredClientTest {
         authorRequest.setUniqueId(uniqueId);
         AuthorResponse authorResponse = client.saveAuthor(authorRequest);
 
-           uniqueId = System.currentTimeMillis();
+        uniqueId = System.currentTimeMillis();
 
         BookRequest bookRequest = new BookRequest();
         bookRequest.setBookTitle("Евгений Онегин");
@@ -47,8 +45,7 @@ public class RestAssuredClientTest {
     @DisplayName("Успешный запрос на получение всех книг автора после сохранения книги")
     @Description("Проверка, что запрос GET для получения всех книг автора возвращает успешный ответ после сохранения книги.")
     public void testGetAuthorBooksAfterBookSave() {
-         long uniqueId = System.currentTimeMillis();
-
+        long uniqueId = System.currentTimeMillis();
 
         AuthorRequest authorRequest = new AuthorRequest();
         authorRequest.setFirstName("Александр");
@@ -65,9 +62,7 @@ public class RestAssuredClientTest {
         bookRequest.setUniqueId(uniqueId);
         client.saveBook(bookRequest);
 
-
         List<Book> authorBooks = client.getAuthorBooks(authorResponse.getAuthorId());
-
-        assertFalse(authorBooks.isEmpty(), "Список книг автора должен быть не пустым после добавления книги");
+        Assertions.assertFalse(authorBooks.isEmpty(), "Список книг автора должен быть не пустым после добавления книги");
     }
 }
